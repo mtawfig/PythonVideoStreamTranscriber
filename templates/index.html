@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Broadcast (AI) Transcriber</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.socket.io/4.6.0/socket.io.min.js" integrity="sha384-c79GN5VsunZvi+Q/WObgk2in0CbZsHnjEqvFxC5DxHn9lTfNce2WW6h2pH6u/kF+" crossorigin="anonymous"></script>
 </head>
 <body>
     <!-- Top Navigation Bar -->
@@ -51,25 +52,18 @@
                     <!-- Transcription Column -->
                     <div class="transcription-column">
                         <div id="yttranscription" class="transcription-content">
-                            <h2 class="transcription-title">Welcome to Broadcast (AI) Transcriber</h2>
-                            <div class="transcription-body">
-                                <p>
-                                    Experience the future of live video transcription with our cutting-edge AI technology.
-                                    Our platform seamlessly processes YouTube live streams and videos in real-time, converting
-                                    spoken content into accurate, readable text instantly.
-                                </p>
-                                <p>
-                                    Whether you're watching a live conference, educational content, news broadcast, or
-                                    entertainment streams, our intelligent transcription service makes content accessible
-                                    to everyone. Perfect for content creators, educators, journalists, and viewers who
-                                    prefer reading alongside watching.
-                                </p>
-                                <p>
-                                    Our advanced AI algorithms understand context, punctuation, and even multiple speakers,
-                                    delivering professional-quality transcriptions. Stay tuned as we continuously improve
-                                    our technology to provide you with the most accurate and timely transcriptions available.
-                                    Simply paste a YouTube URL above and click Start to begin your enhanced viewing experience.
-                                </p>
+                            <!-- Fixed Header with Title and Channel -->
+                            <div class="transcription-header">
+                                <h2 class="transcription-title" id="transcriptionTitle">Loading...</h2>
+                                <div class="transcription-status" id="transcriptionStatus">
+                                    <span class="status-indicator"></span>
+                                    <span class="status-text">Initializing...</span>
+                                </div>
+                            </div>
+
+                            <!-- Scrollable Transcription Body -->
+                            <div class="transcription-body" id="transcriptionBody">
+                                <p class="transcription-text">Transcription will appear here as the video plays...</p>
                             </div>
                         </div>
                     </div>

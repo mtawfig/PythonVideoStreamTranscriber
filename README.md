@@ -9,16 +9,24 @@
 ## Features
 
 - 🎥 **YouTube Video Embedding**: Simply paste any YouTube URL to start watching
-- 📝 **Live Transcription Display**: View transcriptions alongside the video (AI transcription coming in future phases)
+- 🤖 **Real-Time AI Transcription**: Powered by AssemblyAI for accurate speech-to-text
+- 🎙️ **Speaker Diarization**: Identifies and labels different speakers in the video
+- 📡 **Live Stream Support**: Works with both regular videos and live YouTube streams
+- 🔄 **WebSocket Integration**: Real-time transcription streaming as the video plays
 - 🎨 **Modern UI/UX**: Clean, responsive design with a professional color palette
 - 📱 **Fully Responsive**: Works seamlessly on desktop, tablet, and mobile devices
 - ✨ **Smooth Animations**: Enhanced user experience with modern transitions and effects
+- 📜 **Auto-Scrolling**: Transcription automatically scrolls as new text appears
 - ✅ **URL Validation**: Intelligent validation of YouTube URLs before streaming
+- 📊 **Status Indicators**: Visual feedback for transcription progress
 
 ## Technology Stack
 
-- **Backend**: Flask (Python 3.x)
-- **Frontend**: HTML5, CSS3, JavaScript (Vanilla)
+- **Backend**: Flask (Python 3.x) with Flask-SocketIO
+- **Frontend**: HTML5, CSS3, JavaScript (Vanilla) with Socket.IO
+- **Transcription**: AssemblyAI API
+- **Video Processing**: yt-dlp for audio extraction
+- **Real-time Communication**: WebSocket (Socket.IO)
 - **Styling**: Custom CSS with CSS Grid and Flexbox
 - **Icons**: SVG graphics
 
@@ -53,6 +61,8 @@ PythonVideoStreamTranscriber/
 - Python 3.8 or higher
 - pip (Python package installer)
 - A modern web browser
+- **AssemblyAI API Key** (get one free at [assemblyai.com](https://www.assemblyai.com/))
+- FFmpeg (required by yt-dlp for audio extraction)
 
 ### Installation
 
@@ -76,22 +86,46 @@ PythonVideoStreamTranscriber/
    pip install -r requirements.txt
    ```
 
-5. Run the application:
+5. **Configure API Key**:
+   - Copy `.env.example` to `.env`:
+     ```bash
+     cp .env.example .env
+     ```
+   - Edit `.env` and add your AssemblyAI API key:
+     ```
+     ASSEMBLYAI_API_KEY=your_api_key_here
+     ```
+
+6. **Install FFmpeg** (if not already installed):
+   - **Windows**: Download from [ffmpeg.org](https://ffmpeg.org/download.html) and add to PATH
+   - **macOS**: `brew install ffmpeg`
+   - **Linux**: `sudo apt install ffmpeg`
+
+7. Run the application:
    ```bash
    python app.py
    ```
 
-6. Open your browser and navigate to:
+8. Open your browser and navigate to:
    ```
    http://localhost:5000
    ```
 
 ## Usage
 
-1. **Enter YouTube URL**: Paste a valid YouTube video URL in the input field
-2. **Click Start**: The Start button will validate and begin streaming the video
-3. **Watch & Read**: View the video on the left and transcription on the right
-4. **Click Stop**: Stop the video and reset the interface
+1. **Enter YouTube URL**: Paste a valid YouTube video URL (regular video or live stream) in the input field
+2. **Click Start**: The application will:
+   - Validate the URL
+   - Fetch video metadata (title, channel, duration)
+   - Embed the video for playback
+   - Download audio and start real-time transcription
+3. **Watch & Read**:
+   - View the video on the left
+   - Read the AI-generated transcription on the right as it appears in real-time
+   - See speaker labels if multiple speakers are detected
+   - Monitor transcription status with the indicator
+4. **Auto-Scrolling**: The transcription area automatically scrolls as new text appears
+5. **Click Stop**: Stop the video and transcription, reset the interface
 
 ## Color Palette
 
@@ -112,12 +146,17 @@ For detailed setup and development instructions, please refer to:
 
 ## Future Enhancements
 
-- Real-time AI transcription integration
-- Support for live YouTube streams
+- ✅ ~~Real-time AI transcription integration~~ (Implemented with AssemblyAI)
+- ✅ ~~Support for live YouTube streams~~ (Implemented)
+- ✅ ~~Speaker diarization~~ (Implemented)
 - Multi-language transcription support
-- Downloadable transcription files
-- User authentication and history
-- Customizable transcription settings
+- Downloadable transcription files (PDF, TXT, SRT)
+- Timestamp synchronization with video playback
+- User authentication and transcription history
+- Customizable transcription settings (language, format)
+- Search within transcriptions
+- Translation to multiple languages
+- Enhanced live stream real-time processing
 
 ## Browser Support
 
