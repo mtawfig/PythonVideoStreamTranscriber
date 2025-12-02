@@ -61,16 +61,26 @@ def get_video_metadata(video_id):
         url = f'https://www.youtube.com/watch?v={video_id}'
 
         ydl_opts = {
-            'quiet': True,
-            'no_warnings': True,
+            'quiet': False,
+            'no_warnings': False,
             'extract_flat': False,
             'extractor_args': {
                 'youtube': {
-                    'skip': ['dash', 'hls'],
-                    'player_client': ['android', 'web']
+                    'skip': ['hls', 'dash'],
+                    'player_client': ['ios', 'android'],
+                    'player_skip': ['webpage', 'configs'],
                 }
             },
+            'http_headers': {
+                'User-Agent': 'com.google.ios.youtube/19.29.1 (iPhone16,2; U; CPU iOS 17_5_1 like Mac OS X;)',
+                'Accept': '*/*',
+                'Accept-Language': 'en-US,en;q=0.9',
+                'X-Youtube-Client-Name': '5',
+                'X-Youtube-Client-Version': '19.29.1',
+            },
         }
+
+        print(f"Fetching metadata for: {url}")
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
@@ -84,6 +94,8 @@ def get_video_metadata(video_id):
             }
     except Exception as e:
         print(f"Error fetching metadata: {e}")
+        import traceback
+        traceback.print_exc()
         return {
             'title': 'Unknown Title',
             'channel': 'Unknown Channel',
@@ -104,45 +116,83 @@ def download_audio(video_id):
         if not os.path.exists('temp_audio'):
             os.makedirs('temp_audio')
 
-        output_path = f'temp_audio/{video_id}.%(ext)s'
+        output_path = f'temp_audio/{video_id}'
 
         ydl_opts = {
-            'format': 'bestaudio/best',
-            'outtmpl': output_path,
-            'postprocessors': [{
-                'key': 'FFmpegExtractAudio',
-                'preferredcodec': 'mp3',
-                'preferredquality': '192',
-            }],
-            'quiet': True,
-            'no_warnings': True,
+            'format': 'bestaudio[ext=m4a]/bestaudio[ext=webm]/bestaudio',
+            'outtmpl': output_path + '.%(ext)s',
+            'quiet': False,
+            'no_warnings': False,
+            'extract_flat': False,
+            'ignoreerrors': False,
             'extractor_args': {
                 'youtube': {
-                    'skip': ['dash', 'hls'],
-                    'player_client': ['android', 'web']
+                    'skip': ['hls', 'dash'],
+                    'player_client': ['ios', 'android'],
+                    'player_skip': ['webpage', 'configs'],
                 }
             },
             'http_headers': {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                'Accept-Language': 'en-us,en;q=0.5',
-                'Sec-Fetch-Mode': 'navigate',
-            }
+                'User-Agent': 'com.google.ios.youtube/19.29.1 (iPhone16,2; U; CPU iOS 17_5_1 like Mac OS X;)',
+                'Accept': '*/*',
+                'Accept-Language': 'en-US,en;q=0.9',
+                'Accept-Encoding': 'gzip, deflate',
+                'X-Youtube-Client-Name': '5',
+                'X-Youtube-Client-Version': '19.29.1',
+            },
+            'verbose': True,
         }
 
+        print(f"Attempting to download audio from: {url}")
+
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            ydl.download([url])
+            info = ydl.extract_info(url, download=True)
 
-        audio_file = f'temp_audio/{video_id}.mp3'
+            # Get the actual filename
+            if 'requested_downloads' in info and len(info['requested_downloads']) > 0:
+                downloaded_file = info['requested_downloads'][0]['filepath']
+                print(f"Downloaded file: {downloaded_file}")
 
-        if os.path.exists(audio_file):
-            return audio_file
-        else:
-            print(f"Audio file not found: {audio_file}")
+                # Convert to mp3 if not already
+                if not downloaded_file.endswith('.mp3'):
+                    mp3_file = f'temp_audio/{video_id}.mp3'
+                    print(f"Converting to mp3: {mp3_file}")
+
+                    # Try to convert using FFmpeg
+                    try:
+                        import subprocess
+                        subprocess.run([
+                            'ffmpeg', '-i', downloaded_file,
+                            '-vn', '-ar', '44100', '-ac', '2', '-b:a', '192k',
+                            mp3_file, '-y'
+                        ], check=True, capture_output=True)
+
+                        # Remove original file
+                        if os.path.exists(downloaded_file):
+                            os.remove(downloaded_file)
+
+                        return mp3_file
+                    except Exception as e:
+                        print(f"FFmpeg conversion failed: {e}")
+                        # Return original file if conversion fails
+                        return downloaded_file
+                else:
+                    return downloaded_file
+
+            # Fallback: try to find the downloaded file
+            for ext in ['m4a', 'webm', 'mp3', 'opus']:
+                audio_file = f'temp_audio/{video_id}.{ext}'
+                if os.path.exists(audio_file):
+                    print(f"Found audio file: {audio_file}")
+                    return audio_file
+
+            print(f"No audio file found for video: {video_id}")
             return None
 
     except Exception as e:
         print(f"Error downloading audio: {e}")
+        import traceback
+        traceback.print_exc()
         return None
 
 def transcribe_audio(video_id, audio_file, session_id):
