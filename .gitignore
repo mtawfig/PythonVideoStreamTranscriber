@@ -214,3 +214,8 @@ __marimo__/
 *.webm
 downloads/
 temp_audio/
+
+# YouTube Cookies (contains sensitive authentication data)
+*cookies.txt
+youtube_cookies*.txt
+cookies/

@@ -147,6 +147,10 @@ def download_audio(video_id):
         },
     ]
 
+    # Check for cookies file
+    cookies_file = os.getenv('YOUTUBE_COOKIES_FILE', 'youtube_cookies.txt')
+    use_cookies = os.path.exists(cookies_file)
+
     for strategy in client_strategies:
         try:
             print(f"\n=== Trying {strategy['name']} client ===")
@@ -171,6 +175,11 @@ def download_audio(video_id):
                     'Accept-Language': 'en-US,en;q=0.9',
                 },
             }
+
+            # Add cookies if available
+            if use_cookies:
+                ydl_opts['cookiefile'] = cookies_file
+                print(f"🍪 Using cookies from: {cookies_file}")
 
             print(f"Attempting to download with {strategy['name']} client...")
 
