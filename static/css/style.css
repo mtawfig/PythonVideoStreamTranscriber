@@ -243,54 +243,129 @@ body {
 .transcription-content {
     background: rgba(255, 255, 255, 0.05);
     border-radius: 10px;
-    padding: 2rem;
     height: 100%;
-    overflow-y: auto;
     border: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* Fixed Header */
+.transcription-header {
+    padding: 1.5rem 2rem 1rem 2rem;
+    border-bottom: 2px solid rgba(18, 130, 162, 0.3);
+    background: rgba(0, 0, 0, 0.2);
+    flex-shrink: 0;
 }
 
 .transcription-title {
     color: var(--color-highlight);
-    font-size: 2rem;
-    margin-bottom: 1.5rem;
+    font-size: 1.4rem;
+    margin-bottom: 0.75rem;
     font-weight: 700;
-    border-bottom: 3px solid var(--color-highlight);
-    padding-bottom: 0.5rem;
+    line-height: 1.3;
+    word-wrap: break-word;
 }
 
+.transcription-status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: rgba(254, 252, 251, 0.7);
+}
+
+.status-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--color-highlight);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+.status-indicator.complete {
+    background: #2ecc71;
+    animation: none;
+}
+
+.status-indicator.error {
+    background: #e74c3c;
+    animation: none;
+}
+
+/* Scrollable Body */
 .transcription-body {
-    font-size: 1.05rem;
+    flex: 1;
+    padding: 1.5rem 2rem;
+    overflow-y: auto;
+    overflow-x: hidden;
+    font-size: 1rem;
     line-height: 1.8;
     color: var(--color-light);
+    scroll-behavior: smooth;
 }
 
-.transcription-body p {
-    margin-bottom: 1.2rem;
-    text-align: justify;
+.transcription-text {
+    margin-bottom: 1rem;
+    white-space: pre-wrap;
+    word-wrap: break-word;
 }
 
-.transcription-body p:last-child {
-    margin-bottom: 0;
+.transcription-chunk {
+    margin-bottom: 1rem;
+    padding: 0.5rem 0;
+    animation: fadeInText 0.3s ease-in;
+}
+
+@keyframes fadeInText {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.speaker-label {
+    color: var(--color-highlight);
+    font-weight: 600;
+    margin-right: 0.5rem;
+}
+
+.transcription-chunk.live {
+    border-left: 3px solid var(--color-highlight);
+    padding-left: 1rem;
 }
 
 /* ===============================================
    Scrollbar Styling
    =============================================== */
-.transcription-content::-webkit-scrollbar {
+.transcription-body::-webkit-scrollbar {
     width: 8px;
 }
 
-.transcription-content::-webkit-scrollbar-track {
+.transcription-body::-webkit-scrollbar-track {
     background: rgba(255, 255, 255, 0.05);
     border-radius: 10px;
 }
 
-.transcription-content::-webkit-scrollbar-thumb {
+.transcription-body::-webkit-scrollbar-thumb {
     background: var(--color-highlight);
     border-radius: 10px;
 }
 
-.transcription-content::-webkit-scrollbar-thumb:hover {
+.transcription-body::-webkit-scrollbar-thumb:hover {
     background: var(--color-accent);
 }
 
