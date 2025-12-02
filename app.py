@@ -108,92 +108,127 @@ def download_audio(video_id):
     """
     Download audio from YouTube video for transcription.
     Returns the path to the downloaded audio file.
+    Uses multiple client fallback strategies to bypass 403 errors.
     """
-    try:
-        url = f'https://www.youtube.com/watch?v={video_id}'
+    # Create temp directory if it doesn't exist
+    if not os.path.exists('temp_audio'):
+        os.makedirs('temp_audio')
 
-        # Create temp directory if it doesn't exist
-        if not os.path.exists('temp_audio'):
-            os.makedirs('temp_audio')
+    url = f'https://www.youtube.com/watch?v={video_id}'
+    output_path = f'temp_audio/{video_id}'
 
-        output_path = f'temp_audio/{video_id}'
+    # Try different player clients in order of reliability
+    client_strategies = [
+        {
+            'name': 'android_testsuite',
+            'player_client': ['android_testsuite'],
+            'user_agent': 'com.google.android.youtube/19.29.37 (Linux; U; Android 14) gzip',
+        },
+        {
+            'name': 'android_music',
+            'player_client': ['android_music'],
+            'user_agent': 'com.google.android.apps.youtube.music/7.56.51 (Linux; U; Android 14) gzip',
+        },
+        {
+            'name': 'android_creator',
+            'player_client': ['android_creator'],
+            'user_agent': 'com.google.android.apps.youtube.creator/24.29.101 (Linux; U; Android 14) gzip',
+        },
+        {
+            'name': 'ios',
+            'player_client': ['ios'],
+            'user_agent': 'com.google.ios.youtube/19.29.1 (iPhone16,2; U; CPU iOS 17_5_1 like Mac OS X;)',
+        },
+        {
+            'name': 'android',
+            'player_client': ['android'],
+            'user_agent': 'com.google.android.youtube/19.29.37 (Linux; U; Android 14) gzip',
+        },
+    ]
 
-        ydl_opts = {
-            'format': 'bestaudio[ext=m4a]/bestaudio[ext=webm]/bestaudio',
-            'outtmpl': output_path + '.%(ext)s',
-            'quiet': False,
-            'no_warnings': False,
-            'extract_flat': False,
-            'ignoreerrors': False,
-            'extractor_args': {
-                'youtube': {
-                    'skip': ['hls', 'dash'],
-                    'player_client': ['ios', 'android'],
-                    'player_skip': ['webpage', 'configs'],
-                }
-            },
-            'http_headers': {
-                'User-Agent': 'com.google.ios.youtube/19.29.1 (iPhone16,2; U; CPU iOS 17_5_1 like Mac OS X;)',
-                'Accept': '*/*',
-                'Accept-Language': 'en-US,en;q=0.9',
-                'Accept-Encoding': 'gzip, deflate',
-                'X-Youtube-Client-Name': '5',
-                'X-Youtube-Client-Version': '19.29.1',
-            },
-            'verbose': True,
-        }
+    for strategy in client_strategies:
+        try:
+            print(f"\n=== Trying {strategy['name']} client ===")
 
-        print(f"Attempting to download audio from: {url}")
+            ydl_opts = {
+                'format': 'bestaudio[ext=m4a]/bestaudio[ext=webm]/bestaudio/best',
+                'outtmpl': output_path + '.%(ext)s',
+                'quiet': False,
+                'no_warnings': False,
+                'extract_flat': False,
+                'ignoreerrors': False,
+                'extractor_args': {
+                    'youtube': {
+                        'skip': ['hls', 'dash'],
+                        'player_client': strategy['player_client'],
+                        'player_skip': ['webpage', 'configs'],
+                    }
+                },
+                'http_headers': {
+                    'User-Agent': strategy['user_agent'],
+                    'Accept': '*/*',
+                    'Accept-Language': 'en-US,en;q=0.9',
+                },
+            }
 
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(url, download=True)
+            print(f"Attempting to download with {strategy['name']} client...")
 
-            # Get the actual filename
-            if 'requested_downloads' in info and len(info['requested_downloads']) > 0:
-                downloaded_file = info['requested_downloads'][0]['filepath']
-                print(f"Downloaded file: {downloaded_file}")
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                info = ydl.extract_info(url, download=True)
 
-                # Convert to mp3 if not already
-                if not downloaded_file.endswith('.mp3'):
-                    mp3_file = f'temp_audio/{video_id}.mp3'
-                    print(f"Converting to mp3: {mp3_file}")
+                # Get the actual filename
+                if 'requested_downloads' in info and len(info['requested_downloads']) > 0:
+                    downloaded_file = info['requested_downloads'][0]['filepath']
+                    print(f"✅ Successfully downloaded with {strategy['name']}: {downloaded_file}")
 
-                    # Try to convert using FFmpeg
-                    try:
-                        import subprocess
-                        subprocess.run([
-                            'ffmpeg', '-i', downloaded_file,
-                            '-vn', '-ar', '44100', '-ac', '2', '-b:a', '192k',
-                            mp3_file, '-y'
-                        ], check=True, capture_output=True)
+                    # Convert to mp3 if not already and AssemblyAI supports the format
+                    if downloaded_file.endswith(('.m4a', '.webm', '.opus')):
+                        # AssemblyAI supports these formats, but let's convert to mp3 for consistency
+                        mp3_file = f'temp_audio/{video_id}.mp3'
+                        print(f"Converting to mp3: {mp3_file}")
 
-                        # Remove original file
-                        if os.path.exists(downloaded_file):
-                            os.remove(downloaded_file)
+                        try:
+                            import subprocess
+                            result = subprocess.run([
+                                'ffmpeg', '-i', downloaded_file,
+                                '-vn', '-ar', '44100', '-ac', '2', '-b:a', '192k',
+                                mp3_file, '-y'
+                            ], check=True, capture_output=True, text=True)
 
-                        return mp3_file
-                    except Exception as e:
-                        print(f"FFmpeg conversion failed: {e}")
-                        # Return original file if conversion fails
+                            # Remove original file
+                            if os.path.exists(downloaded_file):
+                                os.remove(downloaded_file)
+
+                            print(f"✅ Conversion successful: {mp3_file}")
+                            return mp3_file
+                        except subprocess.CalledProcessError as e:
+                            print(f"FFmpeg conversion failed: {e.stderr}")
+                            # Return original file if conversion fails - AssemblyAI can handle it
+                            print(f"⚠️ Using original format: {downloaded_file}")
+                            return downloaded_file
+                        except FileNotFoundError:
+                            print("⚠️ FFmpeg not found, using original format")
+                            return downloaded_file
+                    else:
                         return downloaded_file
-                else:
-                    return downloaded_file
 
-            # Fallback: try to find the downloaded file
-            for ext in ['m4a', 'webm', 'mp3', 'opus']:
+            # If we get here, check for downloaded files
+            for ext in ['m4a', 'webm', 'mp3', 'opus', 'mp4']:
                 audio_file = f'temp_audio/{video_id}.{ext}'
                 if os.path.exists(audio_file):
-                    print(f"Found audio file: {audio_file}")
+                    print(f"✅ Found audio file with {strategy['name']}: {audio_file}")
                     return audio_file
 
-            print(f"No audio file found for video: {video_id}")
-            return None
+        except Exception as e:
+            print(f"❌ {strategy['name']} client failed: {str(e)[:200]}")
+            continue
 
-    except Exception as e:
-        print(f"Error downloading audio: {e}")
-        import traceback
-        traceback.print_exc()
-        return None
+    # All strategies failed
+    print(f"\n❌ All download strategies failed for video: {video_id}")
+    print("💡 Tip: This video may require authentication. Try:")
+    print("   1. Using a different video")
+    print("   2. Exporting YouTube cookies and adding them to the app")
+    return None
 
 def transcribe_audio(video_id, audio_file, session_id):
     """
