@@ -3,6 +3,6 @@ Werkzeug==3.0.1
 Flask-SocketIO==5.3.5
 python-socketio==5.10.0
 assemblyai==0.48.0
-yt-dlp==2024.12.6
+yt-dlp>=2025.11.12
 python-dotenv==1.0.0
 requests==2.31.0
