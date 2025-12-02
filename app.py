@@ -118,21 +118,22 @@ def download_audio(video_id):
     output_path = f'temp_audio/{video_id}'
 
     # Try different player clients in order of reliability
+    # web and mweb don't require PO tokens as of Dec 2025
     client_strategies = [
+        {
+            'name': 'web',
+            'player_client': ['web'],
+            'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+        },
+        {
+            'name': 'mweb',
+            'player_client': ['mweb'],
+            'user_agent': 'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36',
+        },
         {
             'name': 'android_testsuite',
             'player_client': ['android_testsuite'],
             'user_agent': 'com.google.android.youtube/19.29.37 (Linux; U; Android 14) gzip',
-        },
-        {
-            'name': 'android_music',
-            'player_client': ['android_music'],
-            'user_agent': 'com.google.android.apps.youtube.music/7.56.51 (Linux; U; Android 14) gzip',
-        },
-        {
-            'name': 'android_creator',
-            'player_client': ['android_creator'],
-            'user_agent': 'com.google.android.apps.youtube.creator/24.29.101 (Linux; U; Android 14) gzip',
         },
         {
             'name': 'ios',
@@ -140,8 +141,8 @@ def download_audio(video_id):
             'user_agent': 'com.google.ios.youtube/19.29.1 (iPhone16,2; U; CPU iOS 17_5_1 like Mac OS X;)',
         },
         {
-            'name': 'android',
-            'player_client': ['android'],
+            'name': 'android_embedded',
+            'player_client': ['android_embedded'],
             'user_agent': 'com.google.android.youtube/19.29.37 (Linux; U; Android 14) gzip',
         },
     ]
