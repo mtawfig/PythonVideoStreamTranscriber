@@ -147,9 +147,13 @@ def download_audio(video_id):
         },
     ]
 
-    # Check for cookies file
+    # Check for cookies configuration
+    # Priority: browser cookies > cookie file
+    cookies_from_browser = os.getenv('YOUTUBE_COOKIES_FROM_BROWSER')
     cookies_file = os.getenv('YOUTUBE_COOKIES_FILE', 'youtube_cookies.txt')
-    use_cookies = os.path.exists(cookies_file)
+
+    use_browser_cookies = bool(cookies_from_browser)
+    use_cookie_file = not use_browser_cookies and os.path.exists(cookies_file)
 
     for strategy in client_strategies:
         try:
@@ -177,9 +181,12 @@ def download_audio(video_id):
             }
 
             # Add cookies if available
-            if use_cookies:
+            if use_browser_cookies:
+                ydl_opts['cookiesfrombrowser'] = (cookies_from_browser.lower(), None, None, None)
+                print(f"🍪 Using cookies from browser: {cookies_from_browser}")
+            elif use_cookie_file:
                 ydl_opts['cookiefile'] = cookies_file
-                print(f"🍪 Using cookies from: {cookies_file}")
+                print(f"🍪 Using cookies from file: {cookies_file}")
 
             print(f"Attempting to download with {strategy['name']} client...")
 
@@ -237,7 +244,8 @@ def download_audio(video_id):
     print(f"\n❌ All download strategies failed for video: {video_id}")
     print("💡 Tip: This video may require authentication. Try:")
     print("   1. Using a different video")
-    print("   2. Exporting YouTube cookies and adding them to the app")
+    print("   2. Setting YOUTUBE_COOKIES_FROM_BROWSER=chrome (or firefox, edge, etc.) in .env")
+    print("   3. Or export YouTube cookies to a file and set YOUTUBE_COOKIES_FILE in .env")
     return None
 
 def transcribe_audio(video_id, audio_file, session_id):

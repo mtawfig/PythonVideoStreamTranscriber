@@ -127,6 +127,32 @@ PythonVideoStreamTranscriber/
 4. **Auto-Scrolling**: The transcription area automatically scrolls as new text appears
 5. **Click Stop**: Stop the video and transcription, reset the interface
 
+## Handling Age-Restricted or Sign-In Required Videos
+
+Some YouTube videos require authentication (age-restricted, members-only, private videos). To handle these:
+
+### Option 1: Browser Cookies (Recommended - Easiest)
+
+Add this to your `.env` file:
+```bash
+YOUTUBE_COOKIES_FROM_BROWSER=chrome
+```
+
+Supported browsers: `chrome`, `firefox`, `edge`, `safari`, `opera`, `brave`, `chromium`
+
+This automatically extracts cookies from your browser, allowing the app to download videos you have access to.
+
+### Option 2: Cookie File (Manual)
+
+1. Export your YouTube cookies using a browser extension like "Get cookies.txt LOCALLY"
+2. Save the cookies file as `youtube_cookies.txt` in the project directory
+3. Add this to your `.env` file:
+   ```bash
+   YOUTUBE_COOKIES_FILE=youtube_cookies.txt
+   ```
+
+**Note**: Make sure you're logged into YouTube in your browser before using either method.
+
 ## Color Palette
 
 The application uses a carefully selected color palette:
